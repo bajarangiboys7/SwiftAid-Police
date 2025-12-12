@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2 class="mb-4">SwiftAid Police Dashboard - Davanagere</h2>
+<h2 class="mb-4">SwiftAid Police Database - Davanagere</h2>
 
-<!-- Stats Overview -->
+<!-- Stats Overview - Same as dashboard -->
 <div class="row mb-4">
     <div class="col-md-3 mb-3">
         <div class="card card-police stats-card">
@@ -37,7 +37,9 @@
 
 <!-- Add Officer Button in Top Right -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div></div> <!-- Empty div for spacing -->
+    <div>
+        <h4 class="mb-0"><i class="fas fa-database me-2"></i>Database Management</h4>
+    </div>
     <div>
         <button class="btn btn-success" onclick="showAddOfficerModal()">
             <i class="fas fa-user-plus me-2"></i>Add Police Officer
@@ -52,7 +54,7 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Recent Incidents</h5>
                 <div>
-                    <button class="btn btn-sm btn-outline-primary me-2" onclick="refreshIncidents()">
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="loadRecentIncidents()">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                     <a href="{{ url_for('incidents') }}" class="btn btn-sm btn-police">View All</a>
@@ -93,6 +95,10 @@
                         </div>
                         <div class="mt-1">
                             <small class="text-muted">
+                                Status: 
+                                <span class="badge bg-{{ 'primary' if incident.status == 'active' else 'success' if incident.status == 'resolved' else 'secondary' }}">
+                                    {{ incident.status|title }}
+                                </span>
                                 Source: 
                                 {% if incident.source == 'police' %}
                                     <span class="badge bg-primary">Police</span>
@@ -136,36 +142,71 @@
 </div>
 
 <div class="row">
-    <!-- Quick Actions -->
+    <!-- Database Actions -->
     <div class="col-md-4 mb-4">
         <div class="card card-police">
             <div class="card-header bg-white">
-                <h5 class="mb-0">Quick Actions</h5>
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Database Actions</h5>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <button class="btn btn-police mb-2" onclick="requestBackup()">
-                        <i class="fas fa-broadcast-tower me-2"></i> Request Backup
+                    <button class="btn btn-police mb-2" onclick="exportDatabase()">
+                        <i class="fas fa-download me-2"></i> Export Data
                     </button>
-                    <button class="btn btn-outline-primary mb-2" onclick="requestMedical()">
-                        <i class="fas fa-ambulance me-2"></i> Request Medical
+                    <button class="btn btn-outline-primary mb-2" onclick="backupDatabase()">
+                        <i class="fas fa-database me-2"></i> Backup Database
                     </button>
-                    <button class="btn btn-outline-warning mb-2" onclick="trafficControl()">
-                        <i class="fas fa-traffic-light me-2"></i> Traffic Control
+                    <button class="btn btn-outline-warning mb-2" onclick="searchDatabase()">
+                        <i class="fas fa-search me-2"></i> Advanced Search
                     </button>
-                    <button class="btn btn-outline-info" onclick="databaseSearch()">
-                        <i class="fas fa-database me-2"></i> Database Search
+                    <button class="btn btn-outline-info" onclick="showSystemInfo()">
+                        <i class="fas fa-info-circle me-2"></i> System Info
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Statistics -->
+        <div class="card card-police mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Database Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-2">
+                            <div class="text-primary fw-bold fs-4" id="policeIncidentsCount">0</div>
+                            <small>Police Incidents</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-2">
+                            <div class="text-secondary fw-bold fs-4" id="publicIncidentsCount">0</div>
+                            <small>Public Incidents</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-success fw-bold fs-4" id="activeIncidentsCount">0</div>
+                            <small>Active</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-warning fw-bold fs-4" id="resolvedIncidentsCount">0</div>
+                            <small>Resolved</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Live Updates -->
+    <!-- Live Updates & System Status -->
     <div class="col-md-8 mb-4">
         <div class="card card-police">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Live Updates</h5>
+                <h5 class="mb-0">System Activity</h5>
                 <span class="badge bg-success" id="connectionStatus">
                     <i class="fas fa-circle me-1"></i>Connected to MongoDB
                 </span>
@@ -173,7 +214,51 @@
             <div class="card-body">
                 <div id="liveUpdates" class="live-updates-container">
                     <div class="text-center text-muted">
-                        <i class="fas fa-sync fa-spin me-2"></i>Loading live updates from database...
+                        <i class="fas fa-sync fa-spin me-2"></i>Loading system activity...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Database Reports -->
+        <div class="card card-police mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Quick Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-csv fa-2x text-success mb-2"></i>
+                                <h6>CSV Export</h6>
+                                <a href="{{ url_for('export_csv') }}" class="btn btn-sm btn-success w-100">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                <h6>PDF Report</h6>
+                                <a href="{{ url_for('export_pdf') }}" class="btn btn-sm btn-danger w-100">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-excel fa-2x text-primary mb-2"></i>
+                                <h6>Excel Export</h6>
+                                <a href="{{ url_for('export_excel') }}" class="btn btn-sm btn-primary w-100">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -246,17 +331,6 @@
                         </div>
                     </div>
                     
-                    <!-- Optional username field -->
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label class="form-label">Username (Optional)</label>
-                                <input type="text" class="form-control" name="username" placeholder="Auto-generated if left blank">
-                                <small class="text-muted">Leave blank to auto-generate from name and badge number</small>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <div class="alert alert-info">
                         <small>
                             <i class="fas fa-info-circle me-2"></i>
@@ -273,9 +347,71 @@
         </div>
     </div>
 </div>
+
+<!-- System Info Modal -->
+<div class="modal fade" id="systemInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">System Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Database Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Database:</strong></td>
+                                <td>SwiftAid</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Connection:</strong></td>
+                                <td><span class="badge bg-success" id="dbStatus">Connected</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Collections:</strong></td>
+                                <td id="collectionsCount">5</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Records:</strong></td>
+                                <td id="totalRecords">0</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>System Status</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Server:</strong></td>
+                                <td><span class="badge bg-success">Online</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Backup:</strong></td>
+                                <td id="lastBackup">Never</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Uptime:</strong></td>
+                                <td id="systemUptime">0 days</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Version:</strong></td>
+                                <td>v2.1.0</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
     let policeMap;
     let incidentMarkers = [];
@@ -312,9 +448,6 @@
                 
                 // Update incident count
                 document.getElementById('incidentCount').textContent = incidents.length;
-                
-                // Update live updates
-                updateLiveUpdates(incidents);
             })
             .catch(error => console.error('Error loading incidents:', error));
     }
@@ -373,6 +506,91 @@
         }
     }
 
+    // Load recent incidents for the list
+    async function loadRecentIncidents() {
+        try {
+            const response = await fetch('/api/recent-incidents');
+            const incidents = await response.json();
+            
+            const incidentsList = document.getElementById('incidentsList');
+            
+            if (!incidents || incidents.length === 0) {
+                incidentsList.innerHTML = `
+                    <div class="list-group-item text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No incidents reported yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let incidentsHTML = '';
+            incidents.forEach(incident => {
+                const severityColor = incident.severity === 'high' ? 'danger' : 
+                                    incident.severity === 'medium' ? 'warning' : 'success';
+                const statusColor = incident.status === 'active' ? 'primary' : 
+                                  incident.status === 'resolved' ? 'success' : 'secondary';
+                const sourceBadge = incident.source === 'police' ? 
+                    '<span class="badge bg-primary">Police</span>' : 
+                    '<span class="badge bg-secondary">Public</span>';
+                
+                const createdTime = new Date(incident.created_at).toLocaleTimeString();
+                
+                incidentsHTML += `
+                    <div class="list-group-item list-group-item-action incident-item" 
+                         data-lat="${incident.latitude}" 
+                         data-lng="${incident.longitude}"
+                         data-id="${incident.id}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${incident.title}</h6>
+                            <small class="text-muted">${createdTime}</small>
+                        </div>
+                        <p class="mb-1">
+                            ${incident.description ? incident.description.substring(0, 100) + '...' : 'No description available'}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-${severityColor}">
+                                <i class="fas fa-map-marker-alt me-1"></i> 
+                                ${incident.address}
+                            </small>
+                            <span class="badge bg-${severityColor}">
+                                ${incident.severity.charAt(0).toUpperCase() + incident.severity.slice(1)}
+                            </span>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                Status: <span class="badge bg-${statusColor}">${incident.status}</span>
+                                Source: ${sourceBadge}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            incidentsList.innerHTML = incidentsHTML;
+            
+            // Add click handlers to incident items
+            document.querySelectorAll('.incident-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lng = parseFloat(this.dataset.lng);
+                    if (policeMap) {
+                        policeMap.setView([lat, lng], 16);
+                    }
+                });
+            });
+            
+        } catch (error) {
+            console.error('Error loading recent incidents:', error);
+            document.getElementById('incidentsList').innerHTML = `
+                <div class="list-group-item text-center text-danger py-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading incidents
+                </div>
+            `;
+        }
+    }
+
     // Update live updates section
     function updateLiveUpdates(incidents) {
         const updatesContainer = document.getElementById('liveUpdates');
@@ -420,7 +638,7 @@
 
     // Refresh functions
     function refreshIncidents() {
-        location.reload();
+        loadRecentIncidents();
     }
 
     function refreshMap() {
@@ -454,6 +672,7 @@
         .then(data => {
             alert('Incident status updated successfully');
             loadIncidentsOnMap();
+            loadRecentIncidents();
         })
         .catch(error => {
             console.error('Error updating incident:', error);
@@ -461,21 +680,23 @@
         });
     }
 
-    // Quick action functions
-    function requestBackup() {
-        alert('Backup request sent to nearby units');
+    // Database Actions
+    function exportDatabase() {
+        alert('Database export feature will be implemented soon');
     }
 
-    function requestMedical() {
-        alert('Medical assistance requested');
+    function backupDatabase() {
+        alert('Database backup feature will be implemented soon');
     }
 
-    function trafficControl() {
-        alert('Traffic control units notified');
+    function searchDatabase() {
+        alert('Advanced search feature will be implemented soon');
     }
 
-    function databaseSearch() {
-        window.location.href = "{{ url_for('database') }}";
+    function showSystemInfo() {
+        loadSystemInfo();
+        const modal = new bootstrap.Modal(document.getElementById('systemInfoModal'));
+        modal.show();
     }
 
     // Add Officer functions
@@ -561,26 +782,55 @@
         updatesContainer.innerHTML = updatesHTML;
     }
 
+    // Load database statistics
+    async function loadDatabaseStats() {
+        try {
+            const response = await fetch('/api/database-stats');
+            const stats = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('policeIncidentsCount').textContent = stats.police_incidents;
+                document.getElementById('publicIncidentsCount').textContent = stats.public_incidents;
+                document.getElementById('activeIncidentsCount').textContent = stats.police_incidents + stats.public_incidents - stats.total_resolved;
+                document.getElementById('resolvedIncidentsCount').textContent = stats.total_resolved;
+                document.getElementById('collectionsCount').textContent = stats.collections;
+                document.getElementById('totalRecords').textContent = stats.police_incidents + stats.public_incidents + stats.resolved_cases + stats.officers + stats.users;
+            }
+        } catch (error) {
+            console.error('Error loading database stats:', error);
+        }
+    }
+
+    // Load system information
+    async function loadSystemInfo() {
+        try {
+            const response = await fetch('/api/database-stats');
+            const stats = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('dbStatus').innerHTML = '<i class="fas fa-circle me-1"></i>Connected';
+                document.getElementById('dbStatus').className = 'badge bg-success';
+                document.getElementById('collectionsCount').textContent = stats.collections;
+                document.getElementById('totalRecords').textContent = stats.police_incidents + stats.public_incidents + stats.resolved_cases + stats.officers + stats.users;
+            }
+        } catch (error) {
+            console.error('Error loading system info:', error);
+            document.getElementById('dbStatus').innerHTML = '<i class="fas fa-circle me-1"></i>Disconnected';
+            document.getElementById('dbStatus').className = 'badge bg-danger';
+        }
+    }
+
     // Initialize when page loads
     document.addEventListener('DOMContentLoaded', function() {
         initializeMap();
-        
-        // Add click handlers to incident items
-        document.querySelectorAll('.incident-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const lat = parseFloat(this.dataset.lat);
-                const lng = parseFloat(this.dataset.lng);
-                if (policeMap) {
-                    policeMap.setView([lat, lng], 16);
-                }
-            });
-        });
-
-        // Load recent activity
+        loadRecentIncidents();
         loadRecentActivity();
+        loadDatabaseStats();
         
-        // Set up auto-refresh for activity every 60 seconds
+        // Set up auto-refresh
+        setInterval(loadRecentIncidents, 30000);
         setInterval(loadRecentActivity, 60000);
+        setInterval(loadDatabaseStats, 60000);
     });
 
     // Test database connection
@@ -686,6 +936,10 @@
 
 .highlight-new {
     animation: highlight 2s ease-in-out;
+}
+
+.border.rounded {
+    border: 1px solid #dee2e6 !important;
 }
 </style>
 {% endblock %}

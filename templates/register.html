@@ -4,7 +4,6 @@
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="row">
-            <!-- Registration Form -->
             <div class="col-md-6">
                 <div class="card card-police">
                     <div class="card-header bg-white text-center">
@@ -13,7 +12,6 @@
                     </div>
                     <div class="card-body">
                         <form method="POST" id="registrationForm">
-                            <!-- Police Station Selection -->
                             <div class="mb-3">
                                 <label for="police_station" class="form-label">Police Station *</label>
                                 <select class="form-select" id="police_station" name="police_station" required>
@@ -25,7 +23,6 @@
                                 <small class="text-muted">Only one registration allowed per police station</small>
                             </div>
 
-                            <!-- Police Station Registration Number (6-digit) -->
                             <div class="mb-3">
                                 <label for="police_station_reg_no" class="form-label">Police Station Registration Number *</label>
                                 <div class="input-group">
@@ -37,7 +34,6 @@
                                 <small class="text-muted">Unique 6-digit registration number for login (e.g., 123456)</small>
                             </div>
 
-                            <!-- Police Station Ward Number -->
                             <div class="mb-3">
                                 <label for="ward_number" class="form-label">Police Station Ward Number *</label>
                                 <input type="text" class="form-control" id="ward_number" name="ward_number" 
@@ -45,7 +41,6 @@
                                 <small class="text-muted">Format: Ward-XX/YY or similar</small>
                             </div>
 
-                            <!-- Password -->
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password *</label>
                                 <input type="password" class="form-control" id="password" name="password" 
@@ -64,14 +59,12 @@
                                 </div>
                             </div>
 
-                            <!-- Confirm Password -->
                             <div class="mb-3">
                                 <label for="confirm_password" class="form-label">Confirm Password *</label>
                                 <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
                                 <div id="password-match" class="mt-2"></div>
                             </div>
 
-                            <!-- Terms and Conditions -->
                             <div class="mb-3 form-check">
                                 <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
                                 <label class="form-check-label small" for="terms">
@@ -91,9 +84,7 @@
                 </div>
             </div>
 
-            <!-- Registration Info -->
-            <!-- Update the Registration Info section in register.html -->
-<div class="col-md-6">
+            <div class="col-md-6">
     <div class="card card-police h-100">
         <div class="card-header bg-white">
             <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Registration Information</h5>
@@ -160,7 +151,6 @@
     </div>
 </div>
 
-<!-- Terms & Conditions Modal -->
 <div class="modal fade" id="termsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">

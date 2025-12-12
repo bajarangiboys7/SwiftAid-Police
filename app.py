@@ -264,7 +264,7 @@ def process_public_incident(incident):
         'longitude': float(lng),
         'address': address,
         'reported_by': user_name,
-        'assigned_officer': 'Unassigned',
+        'assigned_officer': incident.get('assigned_officer', 'Unassigned'), # FIXED: Read assigned_officer from document
         'created_at': created_at,
         'source': 'public',
         'original_data': {  # Keep original data for reference
@@ -274,7 +274,6 @@ def process_public_incident(incident):
             'metadata': incident.get('metadata', {})
         }
     }
-
 def process_police_incident(incident):
     """Process police incident to standard format"""
     incident_id = str(incident.get('_id'))
